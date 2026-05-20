@@ -73,6 +73,10 @@ RUN echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d && \
         unzip \
         xvfb \
         xxd \
+        iputils-ping \
+        net-tools \
+        dnsutils \
+        nmap \
         zlib1g || dpkg --configure -a && \
     # Added dpkg --configure -a to handle installation issues with rabbitmq-server on arm64 architecture
     if [  $(find /usr/share/fonts/truetype/msttcorefonts -maxdepth 1 -type f -iname '*.ttf' | wc -l) -lt 30 ]; \
@@ -108,17 +112,18 @@ ARG COMPANY_NAME=onlyoffice
 ARG PRODUCT_NAME=documentserver
 ARG PRODUCT_EDITION=
 ARG PACKAGE_VERSION=
+ARG PACKAGE_IDENTIFIER=
 ARG TARGETARCH
 ARG PACKAGE_BASEURL="http://download.onlyoffice.com/install/documentserver/linux"
-
 ENV COMPANY_NAME=$COMPANY_NAME \
     PRODUCT_NAME=$PRODUCT_NAME \
     PRODUCT_EDITION=$PRODUCT_EDITION \
     DS_PLUGIN_INSTALLATION=false \
-    DS_DOCKER_INSTALLATION=true
-
+    DS_DOCKER_INSTALLATION=true \
+    PACKAGE_IDENTIFIER=$PACKAGE_IDENTIFIER \
+    PACKAGE_BASEURL=$PACKAGE_BASEURL
 RUN PACKAGE_FILE="${COMPANY_NAME}-${PRODUCT_NAME}${PRODUCT_EDITION}${PACKAGE_VERSION:+_$PACKAGE_VERSION}_${TARGETARCH:-$(dpkg --print-architecture)}.deb" && \
-    wget -q -P /tmp "$PACKAGE_BASEURL/$PACKAGE_FILE" && \
+    wget -q -P /tmp "$PACKAGE_BASEURL/${PACKAGE_IDENTIFIER}/$PACKAGE_FILE" && \
     apt-get -y update && \
     service postgresql start && \
     apt-get -yq install /tmp/$PACKAGE_FILE && \
