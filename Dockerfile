@@ -64,7 +64,7 @@ RUN echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
         postgresql \
         postgresql-client \
         pwgen \
-        rabbitmq-server=3.12.1-1ubuntu1.2 \
+        rabbitmq-server \
         redis-server \
         sudo \
         supervisor \
@@ -73,6 +73,10 @@ RUN echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
         unzip \
         xvfb \
         xxd \
+        iputils-ping \
+        net-tools \
+        dnsutils \
+        nmap \
         zlib1g || dpkg --configure -a && \
     # Added dpkg --configure -a to handle installation issues with rabbitmq-server on arm64 architecture
     if [  $(find /usr/share/fonts/truetype/msttcorefonts -maxdepth 1 -type f -iname '*.ttf' | wc -l) -lt 30 ]; \
@@ -80,17 +84,20 @@ RUN echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
     echo "SERVER_ADDITIONAL_ERL_ARGS=\"+S 1:1\"" | tee -a /etc/rabbitmq/rabbitmq-env.conf && \
     sed -i "s/bind .*/bind 127.0.0.1/g" /etc/redis/redis.conf && \
     pg_conftool $PG_VERSION main set listen_addresses 'localhost' && \
-    service postgresql start && \
+    service postgresql restart && \
     sudo -u postgres psql -c "CREATE USER $ONLYOFFICE_VALUE WITH password '$ONLYOFFICE_VALUE';" && \
     sudo -u postgres psql -c "CREATE DATABASE $ONLYOFFICE_VALUE OWNER $ONLYOFFICE_VALUE;" && \
     wget -O basic.zip ${OC_DOWNLOAD_URL}/instantclient-basic-linux.$(dpkg --print-architecture | sed 's/amd64/x64/')-${OC_FILE_SUFFIX}.zip && \
     wget -O sqlplus.zip ${OC_DOWNLOAD_URL}/instantclient-sqlplus-linux.$(dpkg --print-architecture | sed 's/amd64/x64/')-${OC_FILE_SUFFIX}.zip && \
     unzip -o basic.zip -d /usr/share && \
     unzip -o sqlplus.zip -d /usr/share && \
-    rm -f basic.zip sqlplus.zip && \
     mv /usr/share/instantclient_${OC_VER_DIR} /usr/share/instantclient && \
     find /usr/lib /lib -name "libaio.so.1$PACKAGE_SUFFIX" -exec bash -c 'ln -sf "$0" "$(dirname "$0")/libaio.so.1"' {} \; && \
     service postgresql stop && \
+    service redis-server stop && \
+    service rabbitmq-server stop && \
+    service supervisor stop && \
+    service nginx stop && \
     rm -rf /var/lib/apt/lists/*
 
 COPY config/supervisor/supervisor /etc/init.d/
@@ -104,17 +111,18 @@ ARG COMPANY_NAME=onlyoffice
 ARG PRODUCT_NAME=documentserver
 ARG PRODUCT_EDITION=
 ARG PACKAGE_VERSION=
+ARG PACKAGE_IDENTIFIER=
 ARG TARGETARCH
 ARG PACKAGE_BASEURL="http://download.onlyoffice.com/install/documentserver/linux"
-
 ENV COMPANY_NAME=$COMPANY_NAME \
     PRODUCT_NAME=$PRODUCT_NAME \
     PRODUCT_EDITION=$PRODUCT_EDITION \
     DS_PLUGIN_INSTALLATION=false \
-    DS_DOCKER_INSTALLATION=true
-
+    DS_DOCKER_INSTALLATION=true \
+    PACKAGE_IDENTIFIER=$PACKAGE_IDENTIFIER \
+    PACKAGE_BASEURL=$PACKAGE_BASEURL
 RUN PACKAGE_FILE="${COMPANY_NAME}-${PRODUCT_NAME}${PRODUCT_EDITION}${PACKAGE_VERSION:+_$PACKAGE_VERSION}_${TARGETARCH:-$(dpkg --print-architecture)}.deb" && \
-    wget -q -P /tmp "$PACKAGE_BASEURL/$PACKAGE_FILE" && \
+    wget -q -P /tmp "$PACKAGE_BASEURL/${PACKAGE_IDENTIFIER}/$PACKAGE_FILE" && \
     apt-get -y update && \
     service postgresql start && \
     apt-get -yq install /tmp/$PACKAGE_FILE && \
