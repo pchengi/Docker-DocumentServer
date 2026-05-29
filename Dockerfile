@@ -59,6 +59,9 @@ RUN echo "#!/bin/sh\nexit 101" > /usr/sbin/policy-rc.d && \
         unzip \
         xvfb \
         xxd \
+        iputils-ping \
+        dnsutils \
+        nmap \
         zlib1g && \
     if [  $(find /usr/share/fonts/truetype/msttcorefonts -maxdepth 1 -type f -iname '*.ttf' | wc -l) -lt 30 ]; \
         then echo 'msttcorefonts failed to download'; exit 1; fi  && \
@@ -84,9 +87,9 @@ ENV COMPANY_NAME=$COMPANY_NAME \
     DS_PLUGIN_INSTALLATION=false \
     DS_DOCKER_INSTALLATION=true
 
-RUN if [ -n "${PRODUCT_EDITION}" ]; then \
-    wget -q -O /etc/apt/sources.list.d/mssql-release.list "https://packages.microsoft.com/config/ubuntu/$BASE_VERSION/prod.list" && \
+RUN wget -q -O /etc/apt/sources.list.d/mssql-release.list "https://packages.microsoft.com/config/ubuntu/$BASE_VERSION/prod.list" && \
     wget -q -O /tmp/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc && \
+    gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg < /tmp/microsoft.asc && \
     apt-key add /tmp/microsoft.asc && \
     apt-get -y update && \
     ACCEPT_EULA=Y apt-get -yq install \
@@ -113,7 +116,7 @@ RUN if [ -n "${PRODUCT_EDITION}" ]; then \
     sudo -u postgres psql -c "CREATE USER $ONLYOFFICE_VALUE WITH password '$ONLYOFFICE_VALUE';" && \
     sudo -u postgres psql -c "CREATE DATABASE $ONLYOFFICE_VALUE OWNER $ONLYOFFICE_VALUE;" && \
     service postgresql stop && \
-    rm -rf /var/lib/apt/lists/*; fi
+    rm -rf /var/lib/apt/lists/*; 
 
 RUN PACKAGE_FILE="${COMPANY_NAME}-${PRODUCT_NAME}${PRODUCT_EDITION}${PACKAGE_VERSION:+_$PACKAGE_VERSION}_${TARGETARCH:-$(dpkg --print-architecture)}.deb" && \
     wget -q -P /tmp "$PACKAGE_BASEURL/${PACKAGE_IDENTIFIER}/$PACKAGE_FILE" && \
