@@ -88,7 +88,6 @@ RUN if [ -n "${PRODUCT_EDITION}" ]; then \
     wget -q -O /etc/apt/sources.list.d/mssql-release.list "https://packages.microsoft.com/config/ubuntu/$BASE_VERSION/prod.list" && \
     wget -q -O /tmp/microsoft.asc https://packages.microsoft.com/keys/microsoft.asc && \
     apt-key add /tmp/microsoft.asc && \
-    gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg < /tmp/microsoft.asc && \
     apt-get -y update && \
     ACCEPT_EULA=Y apt-get -yq install \
         libaio1${PACKAGE_SUFFIX} \
