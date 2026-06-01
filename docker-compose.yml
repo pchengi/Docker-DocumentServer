@@ -2,15 +2,19 @@ services:
   onlyoffice-documentserver:
     build:
       context: .
+      args:
+        - PACKAGE_IDENTIFIER=${PACKAGE_IDENTIFIER}
+        - PACKAGE_VERSION=${PACKAGE_VERSION}
+        - PACKAGE_BASEURL=${PACKAGE_BASEURL}
       target: documentserver-community
-    image: onlyoffice/documentserver
+    image: naiss/onlyoffice
     container_name: onlyoffice-documentserver
     environment:
       # Uncomment strings below to enable the JSON Web Token validation.
-      #- JWT_ENABLED=true
-      #- JWT_SECRET=secret
-      #- JWT_HEADER=Authorization
-      #- JWT_IN_BODY=true
+      - JWT_ENABLED=true
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_HEADER=Authorization
+      - JWT_IN_BODY=true
     ports:
       - '80:80'
       - '443:443'
@@ -24,8 +28,9 @@ services:
     restart: always
     stop_grace_period: 60s
     volumes:
-       - /var/www/onlyoffice/Data
-       - /var/log/onlyoffice
-       - /var/lib/onlyoffice/documentserver/App_Data/cache/files
-       - /var/www/onlyoffice/documentserver-example/public/files
-       - /usr/share/fonts
+        - /app/onlyoffice/letsencrypt:/etc/letsencrypt
+        - /app/onlyoffice/logs:/var/log/onlyoffice
+        - /app/onlyoffice/data:/var/www/onlyoffice/Data
+        - /app/onlyoffice/lib:/var/lib/onlyoffice
+        - /app/onlyoffice/fonts:/usr/share/fonts
+        - /app/var/www/onlyoffice/Data
