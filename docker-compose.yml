@@ -15,6 +15,9 @@ services:
       - JWT_SECRET=${JWT_SECRET}
       - JWT_HEADER=Authorization
       - JWT_IN_BODY=true
+      - LETS_ENCRYPT_DOMAIN=${LETS_ENCRYPT_DOMAIN}
+      - LETS_ENCRYPT_MAIL=${LETS_ENCRYPT_MAIL}
+      - TZ=${TZ}
     ports:
       - '80:80'
       - '443:443'
