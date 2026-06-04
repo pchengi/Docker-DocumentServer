@@ -36,4 +36,6 @@ services:
         - /app/onlyoffice/data:/var/www/onlyoffice/Data
         - /app/onlyoffice/lib:/var/lib/onlyoffice
         - /app/onlyoffice/fonts:/usr/share/fonts
-        - /app/var/www/onlyoffice/Data
+        - type: bind
+          source: ./local-production-linux.json
+          target: /etc/onlyoffice/documentserver/local-production-linux.json
